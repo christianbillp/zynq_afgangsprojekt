@@ -1,0 +1,21 @@
+{
+   ExpandedHierarchyInLayout: "",
+   guistr: "# # String gsaved with Nlview 6.8.5  2018-01-30 bk=1.4354 VDI=40 GEI=35 GUI=JA:1.6 non-TLS
+#  -string -flagsOSRD
+preplace inst ps8_0_axi_periph -pg 1 -lvl 2 -y 340 -defaultsOSRD
+preplace inst zynq_ultra_ps_e_0 -pg 1 -lvl 1 -y 300 -defaultsOSRD
+preplace inst add_0 -pg 1 -lvl 3 -y 360 -defaultsOSRD
+preplace inst rst_ps8_0_100M -pg 1 -lvl 1 -y 110 -defaultsOSRD
+preplace netloc zynq_ultra_ps_e_0_pl_clk0 1 0 3 30 390 650 470 960J
+preplace netloc zynq_ultra_ps_e_0_M_AXI_HPM0_FPD 1 1 1 N
+preplace netloc rst_ps8_0_100M_peripheral_aresetn 1 1 2 640 460 970J
+preplace netloc rst_ps8_0_100M_interconnect_aresetn 1 1 1 660
+preplace netloc ps8_0_axi_periph_M00_AXI 1 2 1 N
+preplace netloc zynq_ultra_ps_e_0_pl_resetn0 1 0 2 20 10 630
+levelinfo -pg 1 0 330 810 1100 1240 -top 0 -bot 480
+",
+}
+{
+   da_axi4_cnt: "2",
+   da_zynq_ultra_ps_e_cnt: "4",
+}

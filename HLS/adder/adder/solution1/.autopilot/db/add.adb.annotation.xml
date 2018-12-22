@@ -1,0 +1,5 @@
+<annotationInfo>
+<annotationInfo>
+<item  id="14" filename="adder.cpp" linenumber="7" name="c_assign" contextFuncName="add" moduleName="add" rtlName="c" latency="0" BRAM="-1" DSP="-1" FF="0" LUT="39" fileDirectory="C:\Users\chris\Projects\zynq_afgangsprojekt\HLS\adder"><\/item>
+<\/annotationInfo>
+</annotationInfo>
