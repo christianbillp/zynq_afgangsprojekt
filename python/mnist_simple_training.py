@@ -65,8 +65,14 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(125, 10)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = self.conv1(x)
+        x = F.max_pool2d(x, kernel_size=2)
+        x = F.relu(x)
+        
+        x = self.conv2(x)
+        x = F.max_pool2d(x, kernel_size=2)
+        x = F.relu(x)
+        
 #        print(x.shape)
         x = x.view(-1, 125)
         x = self.fc3(x)
