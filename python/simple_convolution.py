@@ -1,31 +1,12 @@
 #%%
 import torch
-from torch.nn import Conv2d, Module
+from torch.nn import Conv2d, Module, Linear
 from torch.nn.functional import relu, max_pool2d, log_softmax
 import numpy as np
-
-#%% Low-level convolution without bias
-kernels = {'sharpen': torch.tensor([[ 0,-1, 0],
-                                    [-1, 5,-1],
-                                    [ 0,-1, 0]], dtype=torch.float32),
-            'edge_detect' :  torch.tensor([[-1,-1,-1],
-                                           [-1, 8,-1],
-                                           [-1,-1,-1]], dtype=torch.float32),
-            'emboss' :  torch.tensor([[-2,-1, 0],
-                                      [-1, 1, 1],
-                                      [ 0, 1, 2]], dtype=torch.float32),
-}
-
-#kernel = torch.tensor([[1.0, 0, 0],
-#                       [0, 1.0, 0],
-#                       [0, 0 ,1.0]])
-    
 
 #%%
 def convolute(image, kernel):
     # Performs a single convolution
-    
-    
     kernel_width = int((kernel.shape[0] - 1) / 2)
 
     # Create smaller output tensor
@@ -33,7 +14,7 @@ def convolute(image, kernel):
     
     for row in range(output.shape[0]):
         for column in range(output.shape[1]):
-            total = 0
+            total = torch.zeros(1)
             for kernel_row in range(kernel.shape[0]):
                 for kernel_column in range(kernel.shape[1]):
                     total += image[row + kernel_row][column + kernel_column] * kernel[kernel_row][kernel_column]
@@ -49,13 +30,10 @@ def sconv(images, n_kernels, kernel_size, kernels, biases):
     output = torch.zeros([len(images), n_kernels, images[0][0].shape[0] - kernel_width*2, images[0][0].shape[1] - kernel_width*2])
 
     for i in range(len(images)):
-        print(f"Image: {i}")
         for j in range(n_kernels):
             result = 0
             for kernel in kernels[j]:
-                print(kernel)
                 result += convolute(images[i][0], kernel) # First channel in image_j
-            print(result)
             output[i][j] = result + biases[j]
     
     return output
@@ -111,44 +89,40 @@ def srelu(images):
         output[0][i] = nrelu(images[0][i]).unsqueeze(0).unsqueeze(0)
     return output
 
+def fc(x, weights, biases):
+    print(x.shape)
 
-k_dim = 3
-kernel = torch.ones([k_dim, k_dim])
+    output_len = 10
+    output = torch.ones(output_len)
+
+    for i in range(output_len):
+        total = torch.zeros(1)
+        for j in range(125):
+            total += x[0][j] * weights[i][j]
+        output[i] = total + biases[i]
+    
+    return output.unsqueeze(0)
+
 trained_model = torch.load('mnist_model.pth')
-kernels1 = trained_model['conv1.weight']
-kernels2 = trained_model['conv2.weight']
-biases1 = trained_model['conv1.bias']
-biases2 = trained_model['conv2.bias']
-
-#k_dim = 3
-#n_kernels1 = 5
-#n_kernels2 = 5
-#kernels1 = torch.ones([n_kernels1, k_dim, k_dim])
-#kernels2 = torch.ones([n_kernels2, k_dim, k_dim])
-
-
-
 
 class Net1(Module):
-
     def __init__(self):
         super(Net1, self).__init__()
         self.conv1 = Conv2d(1, 5, kernel_size=3)
         self.conv2 = Conv2d(5, 5, kernel_size=3)
+        self.fc3 = Linear(125, 10)
 
     def forward(self, x):
-        print(x.shape)
         x = self.conv1(x)
-        print("Net1 conv1: {}".format(x.shape))
         x = max_pool2d(x, kernel_size=2)
-        print("Net1 pool2: {}".format(x.shape))
         x = relu(x)
         
         x = self.conv2(x)
-        print("Net1 conv2: {}".format(x.shape))
-#        x = max_pool2d(x, kernel_size=2)
-#        print("Net1 pool2: {}".format(x.shape))
-#        x = relu(x)
+        x = max_pool2d(x, kernel_size=2)
+        x = relu(x)
+
+        x = x.view(-1, 125)
+        x = self.fc3(x)
 
 #        return log_softmax(x)
         return x
@@ -159,16 +133,15 @@ class Net2(Module):
 
     def forward(self, x):
         x = sconv(x, n_kernels=5, kernel_size=3, kernels=kernels1, biases=biases1)
-        print("Net2 conv1: {}".format(x.shape))
         x = spool(x)
-        print("Net2 pool1: {}".format(x.shape))
         x = srelu(x)
         
         x = sconv(x, n_kernels=5, kernel_size=3, kernels=kernels2, biases=biases2)
-        print("Net2 conv2: {}".format(x.shape))
-#        x = spool(x)
-#        print("Net2 pool2: {}".format(x.shape))
-#        x = srelu(x)
+        x = spool(x)
+        x = srelu(x)
+        
+        x = x.view(-1, 125)
+        x = fc(x, weights=fc_weights, biases=biases3)
 
 #        return log_softmax(x)
         return x
@@ -181,70 +154,40 @@ network1.conv1.weight.data = trained_model['conv1.weight']
 network1.conv1.bias.data = trained_model['conv1.bias']
 network1.conv2.weight.data = trained_model['conv2.weight']
 network1.conv2.bias.data = trained_model['conv2.bias']
+network1.fc3.weight.data = trained_model['fc3.weight']
+network1.fc3.bias.data = trained_model['fc3.bias']
 
-
-# Create picture of ones
-#picture = torch.ones([28,28])
-
-# Fit picture to data format
-#data = picture.unsqueeze(0).unsqueeze(0)
+kernels1 = trained_model['conv1.weight']
+biases1 = trained_model['conv1.bias']
+kernels2 = trained_model['conv2.weight']
+biases2 = trained_model['conv2.bias']
+fc_weights = trained_model['fc3.weight']
+biases3 = trained_model['fc3.bias']
 
 # Load mnist_example
 mnist_example = torch.load('mnist_example.pt')
+#mnist_example = example_data[2][0].unsqueeze(0).unsqueeze(0)
 
-# Set weights to 1
-#network1.conv1.weight.data.fill_(1)
-#network1.conv2.weight.data.fill_(1)
-
-# Set bias to 0
-#network1.conv1.bias.data.fill_(1)
-#network1.conv2.bias.data.fill_(1)
-
-# Perform inference for a single data object
-#result = network(data)
+# Run test
 result1 = network1(mnist_example)
 result2 = network2(mnist_example)
+
+i = 1
 diff = result1 - result2
-non_zero = np.count_nonzero(diff.detach().numpy())
+non_zeros = [np.count_nonzero(diff.detach().numpy()[0][i]) for i in range(len((diff.detach().numpy()[0])))]
+non_zero = np.count_nonzero(diff.detach().numpy()[0][i])
 
 print("""Results:
     Net1: {}
     Net2: {}
-    Non_zero: {}
-    Diff: {}""".format(result1.shape, result2.shape, non_zero, diff.sum()))
+    Non_zeros: {}
+    Diff: {}""".format(result1.shape, result2.shape, non_zeros, diff.sum()))
+print(result1)
+print(result2)
 
-i = 2
-compare(result1.detach().numpy()[0][i],  result2.detach().numpy()[0][i])
+print(np.argmax(result1.detach().numpy()) - np.argmax(result2.detach().numpy()))
+
 #%%
-for i in range(5):
-    d = result1.detach().numpy()[0][i] -  result2.detach().numpy()[0][i]
-    for a in np.histogram(d):
-        print(a)
-#%%
-def nsoftmax_log(image):
-    for row in range(image.shape[0]):
-        for column in range(image.shape[1]):
-            if image[row][column] < 0:
-                image[row][column] = 0
-    return image
-    np.log( np.exp(x_i) / np.exp(x).sum() )
-            
-#%%
-
-
-import matplotlib.pyplot as plt
-
-def compare(a, b):
-    plt.subplot(2,2,1)
-    plt.imshow(a, cmap='gray', interpolation='none')
-    plt.title('original')
-    plt.subplot(2,2,2)
-    plt.imshow(b, cmap='gray', interpolation='none')
-    plt.title('convoluted')
-
-compare(result1.detach().numpy()[0][0],  result2.detach().numpy()[0][0])
-#%%
-#compare(mnist_example[0][0], output)
 
 def check_data(data):
     print("Diagonal:")
@@ -261,7 +204,6 @@ def check_output(data):
                 print("{:.2f}".format(float(data[row][column])), end=' ')
 
 check_data(mnist_example[0][0])
-check_output(output)
 
 def show(data):
     for row in data:
