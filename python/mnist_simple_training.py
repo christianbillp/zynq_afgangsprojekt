@@ -32,7 +32,7 @@ test_loader = torch.utils.data.DataLoader(
                                  (0.1307,), (0.3081,))
                              ])),
   batch_size=batch_size_test, shuffle=True)
-#%%
+
 examples = enumerate(test_loader)
 batch_idx, (example_data, example_targets) = next(examples)
 example_data.shape
@@ -60,9 +60,9 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 5, kernel_size=3)
-        self.conv2 = nn.Conv2d(5, 5, kernel_size=3)
+        self.conv2 = nn.Conv2d(5, 10, kernel_size=3)
 
-        self.fc3 = nn.Linear(125, 10)
+        self.fc3 = nn.Linear(250, 10)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -74,7 +74,7 @@ class Net(nn.Module):
         x = F.relu(x)
         
 #        print(x.shape)
-        x = x.view(-1, 125)
+        x = x.view(-1, 250)
         x = self.fc3(x)
 
         return F.log_softmax(x)
@@ -103,8 +103,8 @@ def train(epoch, run_code):
         train_losses.append(loss.item())
         train_counter.append(
           (batch_idx*64) + ((epoch-1)*len(train_loader.dataset)))
-        torch.save(network.state_dict(), 'C:\\Users\\chris\\Projects\\specialkursus\\model_{}.pth'.format(run_code))
-        torch.save(optimizer.state_dict(), 'C:\\Users\\chris\\Projects\\specialkursus\\optimizer_{}.pth'.format(run_code))
+#        torch.save(network.state_dict(), 'C:\\Users\\chris\\Projects\\specialkursus\\model_{}.pth'.format(run_code))
+#        torch.save(optimizer.state_dict(), 'C:\\Users\\chris\\Projects\\specialkursus\\optimizer_{}.pth'.format(run_code))
 
 def test():
   network.eval()

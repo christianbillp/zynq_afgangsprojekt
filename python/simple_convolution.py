@@ -113,16 +113,25 @@ class Net1(Module):
         self.fc3 = Linear(125, 10)
 
     def forward(self, x):
+        print(x.shape)
         x = self.conv1(x)
+        print(x.shape)
         x = max_pool2d(x, kernel_size=2)
+        print(x.shape)
         x = relu(x)
+        print(x.shape)
         
         x = self.conv2(x)
-        x = max_pool2d(x, kernel_size=2)
-        x = relu(x)
+        print(x.shape)
+#        x = max_pool2d(x, kernel_size=2)
+#        print(x.shape)
+#        x = relu(x)
+#        print(x.shape)
 
-        x = x.view(-1, 125)
-        x = self.fc3(x)
+#        x = x.view(-1, 125)
+#        print(x.shape)
+#        x = self.fc3(x)
+#        print(x.shape)
 
 #        return log_softmax(x)
         return x
@@ -165,8 +174,8 @@ fc_weights = trained_model['fc3.weight']
 biases3 = trained_model['fc3.bias']
 
 # Load mnist_example
-mnist_example = torch.load('mnist_example.pt')
-#mnist_example = example_data[2][0].unsqueeze(0).unsqueeze(0)
+#mnist_example = torch.load('mnist_example.pt')
+mnist_example = example_data[2][0].unsqueeze(0).unsqueeze(0)
 
 # Run test
 result1 = network1(mnist_example)
